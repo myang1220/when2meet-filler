@@ -1,2 +1,2 @@
 # when2meet-filler
-Automatically fills out when2meet based on Google Calendar information. Uses GCal API, involving OAuth, and directly posts to when2meet.
+Automatically fills out when2meet based on Google Calendar information. Uses GCal API, involving OAuth, and directly posts to when2meet. when2meet does not change its cookie, so it seems like grabbing the cookie once from chrome dev tools works.
