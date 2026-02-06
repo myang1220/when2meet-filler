@@ -46,7 +46,9 @@ def start_repl():
   """Start a REPL in terminal to request user input, then return respective output."""
   while True:
     try:
-        user_input = input("Enter something (or 'exit' to quit): ")
+        user_input = input("Enter command (or 'exit' to quit): ")
+        if user_input.lower() == "help":
+            print("The valid commands are:\n- get_events(<MM/DD/YYYY>, <MM/DD/YYYY>)\n- fill <MM/DD/YYYY> <MM/DD/YYYY> <HH>-<HH>\n- exit")
         if user_input.lower() == 'exit':
             print("Exiting REPL.")
             break
@@ -100,12 +102,12 @@ def start_repl():
                 except:
                     print("Failed to post to when2meet. Aborting post request.")
                     continue
-            except:
-                print("Invalid input format. Please use: fill <MM/DD/YYYY> <MM/DD/YYYY> <HH>-<HH>")
+            except Exception as e:
+                print(f"Invalid input format or error occurred: {e}. Please use: fill <MM/DD/YYYY> <MM/DD/YYYY> <HH>-<HH>")
                 continue
 
         else:
-            print(f"You entered: {user_input}. The accepted inputs are: exit, get_events(<MM/DD/YYYY>, <MM/DD/YYYY>)")
+            print(f"{user_input} is not a valid command. Type 'help' for a list of valid commands.")
     except EOFError:
         print("\nExiting REPL.")
         break
@@ -200,17 +202,25 @@ def filter_events_by_time(events, start_hour, end_hour):
 def get_events(start_date, end_date):
     """Fetch and print events between start_date and end_date."""
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    token_path = "token.json"
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+                with open(token_path, "w") as token:
+                    token.write(creds.to_json())
+            except Exception:
+                if os.path.exists(token_path):
+                    os.remove(token_path)
+                creds = None
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 "credentials.json", SCOPES
             )
             creds = flow.run_local_server(port=0)
-            with open("token.json", "w") as token:
+            with open(token_path, "w") as token:
                 token.write(creds.to_json())
     
     try:
